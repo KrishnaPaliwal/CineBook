@@ -14,8 +14,8 @@ Here are the primary services that make up the application. See each repository 
 * **[cinebook-infra](https://github.com/KrishnaPaliwal/cinebook-infra)**: Configuration files for CineBook Application.
 * **[cinebook-frontend](https://github.com/KrishnaPaliwal/cinebook-frontend)**: Frontend GUI project.
 
-## High-Level Analysis
-Architecture: You have a well-defined microservice architecture. Each service has a clear responsibility, and they communicate effectively through REST APIs (for synchronous calls) and RabbitMQ (for asynchronous notifications).
+## High-Level Architecture
+Architecture: This is a well-defined microservice architecture. Each service has a clear responsibility, and they communicate effectively through REST APIs (for synchronous calls) and RabbitMQ (for asynchronous notifications).
 
 Authentication & Authorization: The auth-service handles user registration (with OTP) and login, issuing JWTs. The other services (cinema-service in particular) correctly use a JWT filter to validate these tokens and enforce role-based access (ROLE_ADMIN vs. ROLE_USER).
 
