@@ -1,4 +1,4 @@
-# CineBook Application
+# 'CineBook' Movie Ticket Booking Application
 
 This is the central manifest for CineBook Application, a distributed system built with microservices.
 
@@ -10,6 +10,8 @@ Here are the primary services that make up the application. See each repository 
 * **[cinema-service](https://github.com/KrishnaPaliwal/cinema-service)**: Manages movies and its related functionality.
 * **[booking-service](https://github.com/KrishnaPaliwal/booking-service)**: Manages business functionality of booking flow.
 * **[notification-service](https://github.com/KrishnaPaliwal/notification-service)**: Sends emails, messages and push notifications.
+* **[payment-service](https://github.com/KrishnaPaliwal/payment-service)**: Provides Payment processing through Razorpay.
+* **[location-service](https://github.com/KrishnaPaliwal/location-service)**: A dedicated service which handles geolocation tasks using Opencage.
 * **[api-gateway](https://github.com/KrishnaPaliwal/api-gateway)**: The single entry point for all client requests.
 * **[cinebook-infra](https://github.com/KrishnaPaliwal/cinebook-infra)**: Configuration files for CineBook Application.
 * **[cinebook-frontend](https://github.com/KrishnaPaliwal/cinebook-frontend)**: Frontend GUI project.
