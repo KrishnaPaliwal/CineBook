@@ -29,39 +29,53 @@ Frontend: The React application uses a modern stack with Vite, Material UI, and 
 This document outlines the complete list of functional features implemented in the CineBook application.
 
 ### Core User & Authentication Features
-#### User Registration with OTP: New users can sign up with their name, email, password, and mobile number. The system sends a unique One-Time Password (OTP) via both email and SMS (using Twilio) to verify their contact information before the account is activated.
+#### User Registration with OTP: 
+New users can sign up with their name, email, password, and mobile number. The system sends a unique One-Time Password (OTP) via both email and SMS (using Twilio) to verify their contact information before the account is activated.
 
-User Login: Registered and verified users can log in securely. The system uses JWT (JSON Web Tokens) to manage sessions, ensuring that subsequent requests are authenticated.
+#### User Login: 
+Registered and verified users can log in securely. The system uses JWT (JSON Web Tokens) to manage sessions, ensuring that subsequent requests are authenticated.
 
-Forgot Password: Users who have forgotten their password can request a reset link to be sent to their registered email address. The link contains a secure, single-use token.
+#### Forgot Password: 
+Users who have forgotten their password can request a reset link to be sent to their registered email address. The link contains a secure, single-use token.
 
-Password Reset: Users can follow the link from the email to a dedicated page where they can set a new password for their account.
+#### Password Reset: 
+Users can follow the link from the email to a dedicated page where they can set a new password for their account.
 
-User Profile Management: Logged-in users can view their profile information (name, email, mobile number) and have the functionality to change their password securely by providing their current password.
+#### User Profile Management: 
+Logged-in users can view their profile information (name, email, mobile number) and have the functionality to change their password securely by providing their current password.
 
-Core Booking & Payment Flow
+### Core Booking & Payment Flow
 Movie & Showtime Browsing: Users can view a list of all movies currently showing. They can click on a movie to see all available showtimes.
 
-Seat Selection: For a specific showtime, users are presented with a visual seat map where they can select available seats. Booked seats are clearly marked as unavailable.
+#### Seat Selection: 
+For a specific showtime, users are presented with a visual seat map where they can select available seats. Booked seats are clearly marked as unavailable.
 
-Seat Locking: To prevent race conditions, selected seats are temporarily locked for a short duration via a backend process, ensuring no other user can book the same seats while the current user proceeds to payment.
+#### Seat Locking: 
+To prevent race conditions, selected seats are temporarily locked for a short duration via a backend process, ensuring no other user can book the same seats while the current user proceeds to payment.
 
-Payment Integration (Razorpay): The application is fully integrated with the Razorpay payment gateway. After selecting seats, users are redirected to a secure payment page to complete the transaction using various methods like UPI, cards, etc.
+#### Payment Integration (Razorpay): 
+The application is fully integrated with the Razorpay payment gateway. After selecting seats, users are redirected to a secure payment page to complete the transaction using various methods like UPI, cards, etc.
 
-Booking Confirmation & Notifications: Upon successful payment (confirmed via a webhook from Razorpay), the booking status is updated in the database, and the user receives a confirmation via both email and SMS.
+#### Booking Confirmation & Notifications: 
+Upon successful payment (confirmed via a webhook from Razorpay), the booking status is updated in the database, and the user receives a confirmation via both email and SMS.
 
-Admin & Content Management
+### Admin & Content Management
 Role-Based Access Control: The application distinguishes between regular users (ROLE_USER) and administrators (ROLE_ADMIN). Admin-only features are protected.
 
-Admin Dashboard: A dedicated section for administrators to manage the application's content.
+#### Admin Dashboard: 
+A dedicated section for administrators to manage the application's content.
 
-Add New Movie: Admins can add new movies to the system, including details like title, genre, and an image URL.
+#### Add New Movie: 
+Admins can add new movies to the system, including details like title, genre, and an image URL.
 
-Add New Cinema & Screens: Admins can add new cinema locations, including the cinema's name, address, city, and details about each screen within that cinema (e.g., screen number, total seats).
+#### Add New Cinema & Screens: 
+Admins can add new cinema locations, including the cinema's name, address, city, and details about each screen within that cinema (e.g., screen number, total seats).
 
-Add New Showtime: Admins can create new showtimes for any movie at any available screen, setting the specific date, time, and price per seat.
+#### Add New Showtime: 
+Admins can create new showtimes for any movie at any available screen, setting the specific date, time, and price per seat.
 
-UI/UX & Personalization Features
+### UI/UX & Personalization Features
+
 Location Setting:
 
 Dynamic City List: The list of available cities in the navigation bar is dynamically populated from the cinemas listed in the database.
