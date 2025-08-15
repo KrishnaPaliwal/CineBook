@@ -25,7 +25,9 @@ Notifications: The notification-service is properly decoupled and handles both e
 
 Frontend: The React application uses a modern stack with Vite, Material UI, and a component-based structure. Global state for authentication is managed well with a Context.
 
-## Functional Features
+# CineBook Application: Implemented Features
+This document outlines the complete list of functional features implemented in the CineBook application.
+
 Core User & Authentication Features
 User Registration with OTP: New users can sign up with their name, email, password, and mobile number. The system sends a unique One-Time Password (OTP) via both email and SMS (using Twilio) to verify their contact information before the account is activated.
 
