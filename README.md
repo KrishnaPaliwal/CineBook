@@ -29,8 +29,8 @@ Frontend: The React application uses a modern stack with Vite, Material UI, and 
 This document outlines the complete list of functional features implemented in the CineBook application.
 
 ### Core User & Authentication Features
-  #### User Registration with OTP: 
-    New users can sign up with their name, email, password, and mobile number. The system sends a unique One-Time Password (OTP) via both email and SMS (using Twilio) to verify their     contact information before the account is activated.
+#### User Registration with OTP: 
+New users can sign up with their name, email, password, and mobile number. The system sends a unique One-Time Password (OTP) via both email and SMS (using Twilio) to verify their     contact information before the account is activated.
 
 #### User Login: 
 Registered and verified users can log in securely. The system uses JWT (JSON Web Tokens) to manage sessions, ensuring that subsequent requests are authenticated.
