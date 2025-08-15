@@ -29,8 +29,8 @@ Frontend: The React application uses a modern stack with Vite, Material UI, and 
 This document outlines the complete list of functional features implemented in the CineBook application.
 
 ### Core User & Authentication Features
-#### User Registration with OTP: 
-New users can sign up with their name, email, password, and mobile number. The system sends a unique One-Time Password (OTP) via both email and SMS (using Twilio) to verify their contact information before the account is activated.
+  #### User Registration with OTP: 
+    New users can sign up with their name, email, password, and mobile number. The system sends a unique One-Time Password (OTP) via both email and SMS (using Twilio) to verify their     contact information before the account is activated.
 
 #### User Login: 
 Registered and verified users can log in securely. The system uses JWT (JSON Web Tokens) to manage sessions, ensuring that subsequent requests are authenticated.
@@ -76,23 +76,29 @@ Admins can create new showtimes for any movie at any available screen, setting t
 
 ### UI/UX & Personalization Features
 
-Location Setting:
+#### Location Setting:
 
-Dynamic City List: The list of available cities in the navigation bar is dynamically populated from the cinemas listed in the database.
+##### Dynamic City List: 
+The list of available cities in the navigation bar is dynamically populated from the cinemas listed in the database.
 
-Geolocation: Users can click an icon to use their browser's location services to automatically detect their city and update the movie listings.
+##### Geolocation: 
+Users can click an icon to use their browser's location services to automatically detect their city and update the movie listings.
 
-Location-Based Filtering: The homepage displays only the movies that have showtimes in the user's selected city.
+##### Location-Based Filtering: 
+The homepage displays only the movies that have showtimes in the user's selected city.
 
-Booking History:
+#### Booking History:
 
-Tabbed View: Logged-in users can view their bookings, neatly separated into "Upcoming" and "Past" tabs.
+##### Tabbed View: 
+Logged-in users can view their bookings, neatly separated into "Upcoming" and "Past" tabs.
 
-Detailed Booking Cards: Each booking is displayed with the movie poster, title, showtime, seat numbers, and status (e.g., CONFIRMED, CANCELLED).
+##### Detailed Booking Cards: 
+Each booking is displayed with the movie poster, title, showtime, seat numbers, and status (e.g., CONFIRMED, CANCELLED).
 
-PDF Ticket Download: For confirmed upcoming bookings, users can download a full e-ticket in PDF format, which includes a scannable QR code and all booking details.
+##### PDF Ticket Download: 
+For confirmed upcoming bookings, users can download a full e-ticket in PDF format, which includes a scannable QR code and all booking details.
 
-Booking Cancellation & Refund:
+#### Booking Cancellation & Refund:
 
 Users can cancel their upcoming, confirmed bookings directly from the Booking History page.
 
