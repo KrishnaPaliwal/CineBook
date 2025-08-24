@@ -12,7 +12,6 @@ Here are the primary services that make up the application. See each repository 
 * **[notification-service](https://github.com/KrishnaPaliwal/notification-service)**: Sends emails, messages and push notifications.
 * **[payment-service](https://github.com/KrishnaPaliwal/payment-service)**: Provides Payment processing through Razorpay.
 * **[location-service](https://github.com/KrishnaPaliwal/location-service)**: A dedicated service which handles geolocation tasks using Opencage.
-* **[api-gateway](https://github.com/KrishnaPaliwal/api-gateway)**: The single entry point for all client requests.
 * **[cinebook-infra](https://github.com/KrishnaPaliwal/cinebook-infra)**: Configuration files for CineBook Application.
 * **[cinebook-frontend](https://github.com/KrishnaPaliwal/cinebook-frontend)**: Frontend GUI project.
 
