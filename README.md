@@ -6,7 +6,7 @@ This is the central manifest for CineBook Application, a distributed system buil
 
 Here are the primary services that make up the application. See each repository for specific details.
 
-* **[auth-service](https://github.com/KrishnaPaliwal/auth-service)**: Manages user accounts, authentication, and profiles.
+* **[user-management-service](https://github.com/KrishnaPaliwal/user-management-service)**: Manages user accounts, authentication, and profiles.
 * **[cinema-service](https://github.com/KrishnaPaliwal/cinema-service)**: Manages movies and its related functionality.
 * **[booking-service](https://github.com/KrishnaPaliwal/booking-service)**: Manages business functionality of booking flow.
 * **[notification-service](https://github.com/KrishnaPaliwal/notification-service)**: Sends emails, messages and push notifications.
@@ -18,7 +18,7 @@ Here are the primary services that make up the application. See each repository 
 ## High-Level Architecture
 Architecture: This is a well-defined microservice architecture. Each service has a clear responsibility, and they communicate effectively through REST APIs (for synchronous calls) and RabbitMQ (for asynchronous notifications).
 
-* **Authentication & Authorization:** The auth-service handles user registration (with OTP) and login, issuing JWTs. The other services (like cinema-service) correctly use a JWT filter to validate these tokens and enforce role-based access (ROLE_ADMIN vs. ROLE_USER).
+* **Authentication & Authorization:** The user-management-service handles user registration (with OTP) and login, issuing JWTs. The other services (like cinema-service) correctly use a JWT filter to validate these tokens and enforce role-based access (ROLE_ADMIN vs. ROLE_USER).
 
 * **Booking Flow:** The booking process is robust, following a "lock-then-pay" model. It correctly interacts with the cinema-service for show details and the payment-service for transactions.
 
@@ -101,3 +101,4 @@ Admins can create new showtimes for any movie at any available screen, setting t
 
 ## How to Run
 Deploy these services on Google Cloud GKE Cluster.
+
