@@ -1,104 +1,110 @@
 # 'CineBook' Movie Ticket Booking Application
 
-This is the central manifest for CineBook Application, a distributed system built with microservices.
+Welcome to the CineBook application repository! CineBook is a modern, highly scalable, and distributed movie ticket booking system built from the ground up using microservices architecture. It aims to provide a seamless and robust experience for users to browse movies, select seats, and book tickets, while offering an administrative dashboard for managing content.
 
-## Microservices Architecture
+This repository serves as the central manifest and documentation hub for the entire system, detailing the architecture, technology stack, and implemented features across all services.
 
-Here are the primary services that make up the application. See each repository for specific details.
+---
 
-* **[user-management-service](https://github.com/KrishnaPaliwal/user-management-service)**: Manages user accounts, authentication, and profiles.
-* **[cinema-service](https://github.com/KrishnaPaliwal/cinema-service)**: Manages movies and its related functionality.
-* **[booking-service](https://github.com/KrishnaPaliwal/booking-service)**: Manages business functionality of booking flow.
-* **[notification-service](https://github.com/KrishnaPaliwal/notification-service)**: Sends emails, messages and push notifications.
-* **[payment-service](https://github.com/KrishnaPaliwal/payment-service)**: Provides Payment processing through Razorpay.
-* **[location-service](https://github.com/KrishnaPaliwal/location-service)**: A dedicated service which handles geolocation tasks using Opencage.
-* **[cinebook-infra](https://github.com/KrishnaPaliwal/cinebook-infra)**: Configuration files for CineBook Application.
-* **[cinebook-frontend](https://github.com/KrishnaPaliwal/cinebook-frontend)**: Frontend GUI project.
+## 🏗️ Microservices Architecture
 
-## High-Level Architecture
-Architecture: This is a well-defined microservice architecture. Each service has a clear responsibility, and they communicate effectively through REST APIs (for synchronous calls) and RabbitMQ (for asynchronous notifications).
+The system is decomposed into several independent microservices, each bounded by its specific domain. This ensures loose coupling, independent scalability, and easier maintenance. Here is a detailed breakdown of each service:
 
-* **Authentication & Authorization:** The user-management-service handles user registration (with OTP) and login, issuing JWTs. The other services (like cinema-service) correctly use a JWT filter to validate these tokens and enforce role-based access (ROLE_ADMIN vs. ROLE_USER).
+* **[user-management-service](https://github.com/KrishnaPaliwal/user-management-service)**: 
+  - **Responsibility:** Handles all user-related operations, including registration, profile management, and authentication.
+  - **Key Features:** It seamlessly integrates with **Keycloak** (acting as an OAuth2 Authorization Server) to securely manage identities, roles (User/Admin), and issue JSON Web Tokens (JWT) for secure downstream service communication.
 
-* **Booking Flow:** The booking process is robust, following a "lock-then-pay" model. It correctly interacts with the cinema-service for show details and the payment-service for transactions.
+* **[cinema-service](https://github.com/KrishnaPaliwal/cinema-service)**: 
+  - **Responsibility:** The core catalog service that manages all master data related to the cinema business.
+  - **Key Features:** Manages the catalog of movies, geographical cinemas, physical screens within cinemas, and the scheduling of showtimes. It exposes REST APIs for the frontend to query available movies and showtimes based on location and date.
 
-* **Notifications:** The notification-service is properly decoupled and handles both email and SMS notifications for OTP and booking confirmations.
+* **[booking-service](https://github.com/KrishnaPaliwal/booking-service)**: 
+  - **Responsibility:** The most complex service in the ecosystem, orchestrating the entire ticket booking workflow.
+  - **Key Features:** It implements **CQRS (Command Query Responsibility Segregation)** and **Event Sourcing** using the **Axon Framework** to guarantee transactional integrity and maintain an immutable audit log of booking state changes. Furthermore, it leverages **Temporal** for robust, fault-tolerant workflow orchestration (e.g., handling timeouts if a payment isn't completed within the seat-lock window).
 
-* **Location Service:** A dedicated location-service has been added to handle geolocation tasks. It provides a reverse geocoding feature, converting a user's latitude and longitude coordinates into a city name by communicating with a third-party API. This keeps the frontend simple and the API keys secure.
+* **[notification-service](https://github.com/KrishnaPaliwal/notification-service)**: 
+  - **Responsibility:** A decoupled, asynchronous service dedicated to outbound communications.
+  - **Key Features:** Listens to Domain Events via Kafka (e.g., `UserRegisteredEvent`, `BookingConfirmedEvent`) and dispatches emails (via SMTP) and SMS (via Twilio). It handles OTPs for registration and e-tickets for confirmed bookings.
 
-* **Frontend:** The React application uses a modern stack with Vite, Material UI, and a component-based structure. Global state for authentication and location is managed well with React's Context API.
+* **[payment-service](https://github.com/KrishnaPaliwal/payment-service)**: 
+  - **Responsibility:** Securely handles financial transactions.
+  - **Key Features:** Provides a secure integration with the **Razorpay API**. It manages payment intents, verifies webhook signatures from Razorpay to confirm successful payments, and initiates refunds for cancelled bookings.
 
-# CineBook Application: Implemented Features
+* **[location-service](https://github.com/KrishnaPaliwal/location-service)**: 
+  - **Responsibility:** Handles geolocation and mapping functionalities.
+  - **Key Features:** Utilizes the **OpenCage Geocoder API** to perform reverse geocoding (converting GPS coordinates from the user's browser into a city name). This dedicated service abstracts third-party API dependencies and keeps sensitive API keys secure on the backend.
 
-This document outlines the complete list of functional features implemented in the CineBook application.
+* **[cinebook-infra](https://github.com/KrishnaPaliwal/cinebook-infra)**: 
+  - **Responsibility:** The Infrastructure-as-Code (IaC) repository.
+  - **Key Features:** Contains all Kubernetes deployment manifests, services, ingress configurations, ConfigMaps, Secrets, and Helm charts necessary to deploy the entire CineBook suite into a Kubernetes cluster (like GKE).
 
-## Core User & Authentication Features
+* **[cinebook-frontend](https://github.com/KrishnaPaliwal/cinebook-frontend)**: 
+  - **Responsibility:** The user-facing web application.
+  - **Key Features:** A highly responsive Single Page Application (SPA) built with **React 18** and **Vite**. It utilizes **Material UI (MUI)** for a clean, modern aesthetic and React Context API for global state management (auth and location).
 
-### User Registration with OTP
-New users can sign up with their name, email, password, and mobile number. The system sends a unique One-Time Password (OTP) via both email and SMS (using Twilio) to verify their contact information before the account is activated.
+* **Shared Libraries (cinebook-core-common & cinebook-common-messaging)**: 
+  - **Responsibility:** DRY (Don't Repeat Yourself) principle implementation.
+  - **Key Features:** These modules contain shared Data Transfer Objects (DTOs), common utility classes, global exception handlers, and the **Avro schemas** required for Kafka messaging, ensuring all services communicate using a strictly typed contract.
 
-### User Login
-Registered and verified users can log in securely. The system uses JWT (JSON Web Tokens) to manage sessions, ensuring that subsequent requests are authenticated.
+---
 
-### Forgot Password
-Users who have forgotten their password can request a reset link to be sent to their registered email address. The link contains a secure, single-use token.
+## ⚙️ High-Level System Architecture & Tech Stack
 
-### Password Reset
-Users can follow the link from the email to a dedicated page where they can set a new password for their account.
+The CineBook backend is built using a modern Java stack: **Java 21**, **Spring Boot 3.3**, and **Spring Cloud**.
 
-### User Profile Management
-Logged-in users can view their profile information (name, email, mobile number) and have the functionality to change their password securely by providing their current password.
+### 1. Inter-Service Communication
+- **Synchronous:** Services communicate via REST/HTTP using Spring Cloud OpenFeign for direct queries (e.g., Booking Service querying Cinema Service for showtime details).
+- **Asynchronous (Event-Driven):** **Apache Kafka** is the backbone of the system. State changes (like a completed payment or a new user registration) are published as events to Kafka topics. Services consume these events to update their local state or trigger actions (like sending an email). **Avro serialization** and Confluent Schema Registry are used to ensure schema evolution and type safety.
 
-## Core Booking & Payment Flow
+### 2. Security & API Gateway
+- **OAuth2 & Keycloak:** The system employs a robust security model. Keycloak acts as the Identity Provider (IdP). The Spring Boot services act as OAuth2 Resource Servers, validating JWTs on every request to ensure the user is authenticated and authorized (checking for `ROLE_USER` or `ROLE_ADMIN`).
 
-### Movie & Showtime Browsing
-Users can view a list of all movies currently showing. They can click on a movie to see all available showtimes.
+### 3. Databases & Caching
+- **PostgreSQL:** Each microservice has its own isolated PostgreSQL database (Database-per-service pattern), ensuring loose coupling. Database schemas and migrations are strictly managed using **Flyway**.
+- **Redis:** Used extensively for caching frequently accessed data (like movie lists per city) to reduce database load and improve response times. It is also utilized by **Bucket4j** for API rate limiting to prevent abuse.
 
-### Seat Selection
-For a specific showtime, users are presented with a visual seat map where they can select available seats. Booked seats are clearly marked as unavailable.
+### 4. Observability, Logging, & Resiliency
+- **OpenTelemetry (OTel):** The entire application is heavily instrumented with OpenTelemetry. It provides distributed tracing across all microservices, allowing developers to track a request from the frontend, through the API, and across Kafka events.
+- **Structured Logging:** Logs are formatted using the Logstash Logback encoder, making them easily searchable in centralized logging systems (like ELK/EFK stack).
+- **Metrics:** Micrometer exposes application metrics to a **Prometheus** registry.
+- **Resilience4j:** Protects the system from cascading failures using Circuit Breakers, Retry mechanisms, and Timeouts on synchronous inter-service calls.
 
-### Seat Locking
-To prevent race conditions, selected seats are temporarily locked for a short duration via a backend process, ensuring no other user can book the same seats while the current user proceeds to payment.
+---
 
-### Payment Integration (Razorpay)
-The application is fully integrated with the Razorpay payment gateway. After selecting seats, users are redirected to a secure payment page to complete the transaction using various methods like UPI, cards, etc.
+## 🚀 Implemented Features
 
-### Booking Confirmation & Notifications
-Upon successful payment (confirmed via a webhook from Razorpay), the booking status is updated in the database, and the user receives a confirmation via both email and SMS.
+This section details the rich feature set available to both end-users and administrators.
 
-## Admin & Content Management
+### Core User & Authentication Features
+* **OTP-Verified Registration:** To ensure high data quality, new user registrations require verification via a One-Time Password (OTP) sent to both email and SMS (via Twilio) before the account becomes active.
+* **Secure JWT Login:** Users authenticate securely, receiving a JWT that manages their session state securely without server-side session overhead.
+* **Password Management:** Complete flow for "Forgot Password" with secure, single-use email links, and the ability for logged-in users to update their passwords from their profile dashboard.
+* **Profile Management:** Users can view and manage their personal information seamlessly.
 
-### Role-Based Access Control
-The application distinguishes between regular users (**ROLE_USER**) and administrators (**ROLE_ADMIN**). Admin-only features are protected.
+### Core Booking & Payment Flow
+* **Dynamic Movie Browsing:** A rich UI allowing users to browse currently showing movies, filter by genre or language, and view available showtimes for their selected date and city.
+* **Interactive Seat Selection:** A visual, interactive seat map for a specific showtime. Users can see available, booked, and currently locked seats in real-time.
+* **Distributed Seat Locking:** To prevent race conditions (double-booking), selected seats are temporarily locked in the backend (using Redis/Temporal) for a defined duration. If the user doesn't pay within this window, the seats are automatically released.
+* **Razorpay Payment Integration:** A seamless and secure checkout experience integrated with Razorpay, supporting various payment methods (UPI, Credit/Debit Cards, NetBanking).
+* **Instant Notifications:** Upon successful payment validation via Razorpay webhooks, the system instantly dispatches booking confirmation e-tickets via email and SMS.
 
-### Admin Dashboard
-A dedicated section for administrators to manage the application's content.
+### Admin & Content Management
+* **Role-Based Access Control (RBAC):** Strict separation of concerns. Only users with the `ROLE_ADMIN` authority can access the admin dashboard.
+* **Comprehensive Admin Dashboard:** A dedicated interface for managing the entire cinema catalog.
+* **Content Management:** Admins can effortlessly add new Movies (with posters and metadata), create new Cinemas, define Screens within those cinemas, and schedule Showtimes with specific pricing tiers.
 
-### Add New Movie
-Admins can add new movies to the system, including details like title, genre, and an image URL.
+### UI/UX & Personalization Features
+* **Smart Location Detection:** The application can automatically detect the user's city using HTML5 Geolocation (processed via the location-service) to instantly filter the movie catalog to their area. Users can also manually select their city from a dynamic dropdown.
+* **Organized Booking History:** A dedicated user dashboard categorizing bookings into "Upcoming" and "Past" for easy navigation.
+* **Downloadable PDF e-Tickets:** Confirmed bookings generate a professional, downloadable PDF ticket containing a scannable QR code, seat details, and cinema directions.
+* **Automated Cancellation & Refunds:** Users can cancel upcoming bookings directly from the UI. This triggers an automated workflow in the backend that communicates with Razorpay to initiate a refund and instantly frees up the seats for other customers.
 
-### Add New Cinema & Screens
-Admins can add new cinema locations, including the cinema's name, address, city, and details about each screen within that cinema (e.g., screen number, total seats).
+---
 
-### Add New Showtime
-Admins can create new showtimes for any movie at any available screen, setting the specific date, time, and price per seat.
+## 🛠️ How to Run & Deploy
 
-## UI/UX & Personalization Features
+This application is designed for cloud-native environments. 
 
-### Location Setting
-* **Dynamic City List:** The list of available cities in the navigation bar is dynamically populated from the cinemas listed in the database.
-* **Geolocation:** Users can click an icon to use their browser's location services to automatically detect their city and update the movie listings.
-* **Location-Based Filtering:** The homepage displays only the movies that have showtimes in the user's selected city.
-
-### Booking History
-* **Tabbed View:** Logged-in users can view their bookings, neatly separated into "Upcoming" and "Past" tabs.
-* **Detailed Booking Cards:** Each booking is displayed with the movie poster, title, showtime, seat numbers, and status (e.g., CONFIRMED, CANCELLED).
-* **PDF Ticket Download:** For confirmed upcoming bookings, users can download a full e-ticket in PDF format, which includes a scannable QR code and all booking details.
-
-### Booking Cancellation & Refund
-* Users can cancel their upcoming, confirmed bookings directly from the Booking History page.
-* This action automatically triggers a full refund process via the Razorpay API and makes the seats available again for other users.
-
-## How to Run
-Deploy these services on Google Cloud GKE Cluster.
-
+1. **Prerequisites:** You will need a Kubernetes cluster (e.g., Google Kubernetes Engine - GKE, Minikube, or Docker Desktop with Kubernetes enabled), Helm, and `kubectl` configured.
+2. **Infrastructure:** Navigate to the `cinebook-infra` repository. Ensure you have the necessary secrets configured (e.g., Database passwords, Keycloak credentials, Razorpay API keys, Twilio credentials).
+3. **Deployment:** Apply the Kubernetes manifests and Helm charts provided in the `cinebook-infra` repository to spin up the databases, Kafka cluster, Keycloak instance, and all the microservices.
