@@ -2,109 +2,112 @@
 
 Welcome to the CineBook application repository! CineBook is a modern, highly scalable, and distributed movie ticket booking system built from the ground up using microservices architecture. It aims to provide a seamless and robust experience for users to browse movies, select seats, and book tickets, while offering an administrative dashboard for managing content.
 
-This repository serves as the central manifest and documentation hub for the entire system, detailing the architecture, technology stack, and implemented features across all services.
+This repository serves as the central manifest and documentation hub for the entire system, detailing the architecture, technology stack, and technical design patterns implemented across all services.
 
 ---
 
 ## 🏗️ Microservices Architecture
 
-The system is decomposed into several independent microservices, each bounded by its specific domain. This ensures loose coupling, independent scalability, and easier maintenance. Here is a detailed breakdown of each service:
+The system is decomposed into several independent microservices, strictly enforcing Domain-Driven Design (DDD) principles. This ensures loose coupling, independent scalability, and deployment autonomy. 
 
 * **[user-management-service](https://github.com/KrishnaPaliwal/user-management-service)**: 
-  - **Responsibility:** Handles all user-related operations, including registration, profile management, and authentication.
-  - **Key Features:** It seamlessly integrates with **Keycloak** (acting as an OAuth2 Authorization Server) to securely manage identities, roles (User/Admin), and issue JSON Web Tokens (JWT) for secure downstream service communication.
+  - **Domain:** Identity and Access Management (IAM), User Profiles.
+  - **Technical Role:** Integrates with **Keycloak** (acting as an OAuth2 Authorization Server) to securely manage identities, roles (User/Admin), and issue JSON Web Tokens (JWT) for secure downstream service communication.
 
 * **[cinema-service](https://github.com/KrishnaPaliwal/cinema-service)**: 
-  - **Responsibility:** The core catalog service that manages all master data related to the cinema business.
-  - **Key Features:** Manages the catalog of movies, geographical cinemas, physical screens within cinemas, and the scheduling of showtimes. It exposes REST APIs for the frontend to query available movies and showtimes based on location and date.
+  - **Domain:** Catalog and Master Data Management.
+  - **Technical Role:** Manages the hierarchical data model of Movies -> Cinemas -> Screens -> Showtimes. It exposes optimized REST APIs (Query models) for the frontend to quickly fetch available inventory based on location and date constraints.
 
 * **[booking-service](https://github.com/KrishnaPaliwal/booking-service)**: 
-  - **Responsibility:** The most complex service in the ecosystem, orchestrating the entire ticket booking workflow.
-  - **Key Features:** It implements **CQRS (Command Query Responsibility Segregation)** and **Event Sourcing** using the **Axon Framework** to guarantee transactional integrity and maintain an immutable audit log of booking state changes. Furthermore, it leverages **Temporal** for robust, fault-tolerant workflow orchestration (e.g., handling timeouts if a payment isn't completed within the seat-lock window).
+  - **Domain:** Core Transactional Engine.
+  - **Technical Role:** The most complex service in the ecosystem. It orchestrates the entire ticket booking distributed transaction (Saga). It is built entirely on the **CQRS (Command Query Responsibility Segregation)** and **Event Sourcing** patterns using the **Axon Framework**.
 
 * **[notification-service](https://github.com/KrishnaPaliwal/notification-service)**: 
-  - **Responsibility:** A decoupled, asynchronous service dedicated to outbound communications.
-  - **Key Features:** Listens to Domain Events via Kafka (e.g., `UserRegisteredEvent`, `BookingConfirmedEvent`) and dispatches emails (via SMTP) and SMS (via Twilio). It handles OTPs for registration and e-tickets for confirmed bookings.
+  - **Domain:** Outbound Communications.
+  - **Technical Role:** A decoupled, asynchronous consumer. It listens to Domain Events via Kafka (e.g., `UserRegisteredEvent`, `BookingConfirmedEvent`) and dispatches emails (via SMTP) and SMS (via Twilio APIs). 
 
 * **[payment-service](https://github.com/KrishnaPaliwal/payment-service)**: 
-  - **Responsibility:** Securely handles financial transactions.
-  - **Key Features:** Provides a secure integration with the **Razorpay API**. It manages payment intents, verifies webhook signatures from Razorpay to confirm successful payments, and initiates refunds for cancelled bookings.
+  - **Domain:** Financial Processing.
+  - **Technical Role:** Acts as an anti-corruption layer against third-party payment gateways (**Razorpay**). It manages payment intents, verifies cryptographically signed webhooks to confirm transactions, and publishes `PaymentCompletedEvent`s to the message broker.
 
 * **[location-service](https://github.com/KrishnaPaliwal/location-service)**: 
-  - **Responsibility:** Handles geolocation and mapping functionalities.
-  - **Key Features:** Utilizes the **OpenCage Geocoder API** to perform reverse geocoding (converting GPS coordinates from the user's browser into a city name). This dedicated service abstracts third-party API dependencies and keeps sensitive API keys secure on the backend.
+  - **Domain:** Geolocation mapping.
+  - **Technical Role:** Utilizes the **OpenCage Geocoder API** for reverse geocoding (GPS to City). It acts as a backend-for-frontend (BFF) proxy to hide API keys and enforce caching policies to minimize third-party API costs.
 
 * **[cinebook-infra](https://github.com/KrishnaPaliwal/cinebook-infra)**: 
-  - **Responsibility:** The Infrastructure-as-Code (IaC) repository.
-  - **Key Features:** Contains all Kubernetes deployment manifests, services, ingress configurations, ConfigMaps, Secrets, and Helm charts necessary to deploy the entire CineBook suite into a Kubernetes cluster (like GKE).
+  - **Domain:** Infrastructure-as-Code (IaC).
+  - **Technical Role:** Contains Kubernetes deployment manifests (`Deployment`, `Service`, `Ingress`, `ConfigMap`, `Secret`) and Helm charts necessary for provisioning the cluster topology.
 
 * **[cinebook-frontend](https://github.com/KrishnaPaliwal/cinebook-frontend)**: 
-  - **Responsibility:** The user-facing web application.
-  - **Key Features:** A highly responsive Single Page Application (SPA) built with **React 18** and **Vite**. It utilizes **Material UI (MUI)** for a clean, modern aesthetic and React Context API for global state management (auth and location).
+  - **Domain:** User Interface.
+  - **Technical Role:** A highly responsive Single Page Application (SPA) built with **React 18** and **Vite**. It utilizes **Material UI (MUI)** for the component library and React Context API for global state management.
 
 * **Shared Libraries (cinebook-core-common & cinebook-common-messaging)**: 
-  - **Responsibility:** DRY (Don't Repeat Yourself) principle implementation.
-  - **Key Features:** These modules contain shared Data Transfer Objects (DTOs), common utility classes, global exception handlers, and the **Avro schemas** required for Kafka messaging, ensuring all services communicate using a strictly typed contract.
+  - **Technical Role:** Internal Maven dependencies housing shared Data Transfer Objects (DTOs), cross-cutting concern configurations (like Global Exception Handlers), and the **Avro schemas** required for strictly typed Kafka messaging.
 
 ---
 
-## ⚙️ High-Level System Architecture & Tech Stack
+## ⚙️ Deep Dive: Technical Design & Architecture
 
-The CineBook backend is built using a modern Java stack: **Java 21**, **Spring Boot 3.3**, and **Spring Cloud**.
+The CineBook backend is built using a modern enterprise Java stack: **Java 21** (utilizing virtual threads and new language features), **Spring Boot 3.3**, and **Spring Cloud**.
 
-### 1. Inter-Service Communication
-- **Synchronous:** Services communicate via REST/HTTP using Spring Cloud OpenFeign for direct queries (e.g., Booking Service querying Cinema Service for showtime details).
-- **Asynchronous (Event-Driven):** **Apache Kafka** is the backbone of the system. State changes (like a completed payment or a new user registration) are published as events to Kafka topics. Services consume these events to update their local state or trigger actions (like sending an email). **Avro serialization** and Confluent Schema Registry are used to ensure schema evolution and type safety.
+### 1. Distributed Data Management & Event-Driven Architecture
+- **CQRS & Event Sourcing (Axon):** The `booking-service` separates write operations (Commands) from read operations (Queries). Every change to a booking's state (e.g., `CreateBookingCommand`, `ConfirmPaymentCommand`) generates an immutable Domain Event (`BookingCreatedEvent`, `PaymentConfirmedEvent`). These events are persisted in an Event Store. The current state is derived by replaying these events, guaranteeing a flawless audit trail.
+- **Saga Pattern (Temporal & Kafka):** Booking a ticket involves multiple services (Lock seats in Cinema Service -> Wait for Payment in Payment Service -> Confirm in Booking Service -> Send Notification). **Temporal.io** is used alongside Kafka to orchestrate this Saga, handling distributed compensation logic (rollbacks/refunds) if any step fails (e.g., payment timeout).
+- **Asynchronous Messaging:** **Apache Kafka** is the central nervous system. Services consume and publish events via `spring-cloud-stream-binder-kafka`. **Avro serialization** combined with Confluent Schema Registry ensures backward compatibility and strictly typed message contracts across service boundaries.
 
-### 2. Security & API Gateway
-- **OAuth2 & Keycloak:** The system employs a robust security model. Keycloak acts as the Identity Provider (IdP). The Spring Boot services act as OAuth2 Resource Servers, validating JWTs on every request to ensure the user is authenticated and authorized (checking for `ROLE_USER` or `ROLE_ADMIN`).
+### 2. Security Architecture
+- **OAuth2 & OIDC Authentication:** Keycloak acts as the OpenID Connect (OIDC) Provider. The frontend authenticates directly via PKCE flow, receiving a JWT.
+- **Stateless Authorization:** Spring Boot services are configured as OAuth2 Resource Servers. They intercept requests, parse the Bearer JWT, validate its signature against the Keycloak JWKS endpoint, and map custom claims into Spring Security `GrantedAuthority` objects (e.g., `ROLE_USER`, `ROLE_ADMIN`) for method-level security (e.g., `@PreAuthorize`).
 
-### 3. Databases & Caching
-- **PostgreSQL:** Each microservice has its own isolated PostgreSQL database (Database-per-service pattern), ensuring loose coupling. Database schemas and migrations are strictly managed using **Flyway**.
-- **Redis:** Used extensively for caching frequently accessed data (like movie lists per city) to reduce database load and improve response times. It is also utilized by **Bucket4j** for API rate limiting to prevent abuse.
+### 3. Database Isolation & Optimization
+- **Database-per-Service:** Each microservice owns its independent PostgreSQL database schema to prevent integration database coupling. Schema migrations are strictly versioned and executed at startup using **Flyway**.
+- **Distributed Caching:** **Redis** is utilized as a distributed cache. For example, `cinema-service` caches the master catalog of movies per city to bypass database queries for read-heavy operations, invalidating cache entries only upon admin updates.
 
-### 4. Observability, Logging, & Resiliency
-- **OpenTelemetry (OTel):** The entire application is heavily instrumented with OpenTelemetry. It provides distributed tracing across all microservices, allowing developers to track a request from the frontend, through the API, and across Kafka events.
-- **Structured Logging:** Logs are formatted using the Logstash Logback encoder, making them easily searchable in centralized logging systems (like ELK/EFK stack).
-- **Metrics:** Micrometer exposes application metrics to a **Prometheus** registry.
-- **Resilience4j:** Protects the system from cascading failures using Circuit Breakers, Retry mechanisms, and Timeouts on synchronous inter-service calls.
+### 4. API Resilience & Traffic Control
+- **Circuit Breaking:** Synchronous OpenFeign HTTP calls between services are wrapped with **Resilience4j** Circuit Breakers and Timeouts. This prevents a cascading failure (e.g., if `location-service` is down, `cinema-service` fails fast instead of exhausting its connection pool).
+- **Rate Limiting:** Public-facing APIs are protected by **Bucket4j**, backed by Redis. This implements a token bucket algorithm to throttle excessive requests and prevent brute-force attacks or API abuse.
 
----
+### 5. Observability & Telemetry Stack
+To diagnose issues in a distributed system, comprehensive observability is mandatory.
+- **Distributed Tracing:** **OpenTelemetry (OTel)** java-agents auto-instrument incoming HTTP requests, outgoing REST calls, database queries, and Kafka message publishing/consuming. Trace IDs and Span IDs propagate across all network boundaries, allowing end-to-end visualization of a single user request.
+- **Structured Logging:** The `Logstash-Logback-Encoder` outputs application logs in JSON format, automatically injecting OTel Trace IDs. This allows logs to be aggregated and correlated perfectly with traces.
+- **Metrics Dashboarding:** **Micrometer** exposes JVM, database connection pool, and application-specific metrics to a `/actuator/prometheus` endpoint, which is scraped by a Prometheus server for Grafana dashboarding.
+- **API Documentation:** Interactive API contracts are automatically generated using **Springdoc OpenAPI 3 (Swagger UI)**, accessible at the `/swagger-ui.html` endpoint on each service.
 
-## 🚀 Implemented Features
-
-This section details the rich feature set available to both end-users and administrators.
-
-### Core User & Authentication Features
-* **OTP-Verified Registration:** To ensure high data quality, new user registrations require verification via a One-Time Password (OTP) sent to both email and SMS (via Twilio) before the account becomes active.
-* **Secure JWT Login:** Users authenticate securely, receiving a JWT that manages their session state securely without server-side session overhead.
-* **Password Management:** Complete flow for "Forgot Password" with secure, single-use email links, and the ability for logged-in users to update their passwords from their profile dashboard.
-* **Profile Management:** Users can view and manage their personal information seamlessly.
-
-### Core Booking & Payment Flow
-* **Dynamic Movie Browsing:** A rich UI allowing users to browse currently showing movies, filter by genre or language, and view available showtimes for their selected date and city.
-* **Interactive Seat Selection:** A visual, interactive seat map for a specific showtime. Users can see available, booked, and currently locked seats in real-time.
-* **Distributed Seat Locking:** To prevent race conditions (double-booking), selected seats are temporarily locked in the backend (using Redis/Temporal) for a defined duration. If the user doesn't pay within this window, the seats are automatically released.
-* **Razorpay Payment Integration:** A seamless and secure checkout experience integrated with Razorpay, supporting various payment methods (UPI, Credit/Debit Cards, NetBanking).
-* **Instant Notifications:** Upon successful payment validation via Razorpay webhooks, the system instantly dispatches booking confirmation e-tickets via email and SMS.
-
-### Admin & Content Management
-* **Role-Based Access Control (RBAC):** Strict separation of concerns. Only users with the `ROLE_ADMIN` authority can access the admin dashboard.
-* **Comprehensive Admin Dashboard:** A dedicated interface for managing the entire cinema catalog.
-* **Content Management:** Admins can effortlessly add new Movies (with posters and metadata), create new Cinemas, define Screens within those cinemas, and schedule Showtimes with specific pricing tiers.
-
-### UI/UX & Personalization Features
-* **Smart Location Detection:** The application can automatically detect the user's city using HTML5 Geolocation (processed via the location-service) to instantly filter the movie catalog to their area. Users can also manually select their city from a dynamic dropdown.
-* **Organized Booking History:** A dedicated user dashboard categorizing bookings into "Upcoming" and "Past" for easy navigation.
-* **Downloadable PDF e-Tickets:** Confirmed bookings generate a professional, downloadable PDF ticket containing a scannable QR code, seat details, and cinema directions.
-* **Automated Cancellation & Refunds:** Users can cancel upcoming bookings directly from the UI. This triggers an automated workflow in the backend that communicates with Razorpay to initiate a refund and instantly frees up the seats for other customers.
+### 6. CI/CD & Deployment Pipeline
+- **Containerization:** Every service includes a highly optimized `Dockerfile` leveraging multi-stage builds and lightweight JRE base images to minimize the attack surface and image size.
+- **Continuous Integration:** The repository utilizes **Google Cloud Build** (`cloudbuild.yaml`) to automate the pipeline: compiling Java source, running unit/integration tests, building Docker images, and pushing them to a container registry.
+- **Kubernetes Orchestration:** Infrastructure manifests define `Deployments` (with readiness/liveness probes), `Services` (for internal DNS resolution), and an `Ingress` controller (acting as an API Gateway and TLS termination point) for the production environment.
 
 ---
 
-## 🛠️ How to Run & Deploy
+## 🚀 Implemented Functional Features
 
-This application is designed for cloud-native environments. 
+### Core Booking Flow & Concurrency Control
+* **Distributed Seat Locking:** To prevent the classic "double-booking" race condition, seats are locked transactionally when a user selects them. This lock has a Time-To-Live (TTL). If the payment webhook is not received within the TTL, Temporal orchestrates a compensation transaction to release the lock.
+* **Idempotent Payment Webhooks:** The `payment-service` webhook endpoint is designed to be idempotent. It cryptographically verifies the Razorpay signature and ensures that duplicate webhook deliveries do not result in double state changes.
 
-1. **Prerequisites:** You will need a Kubernetes cluster (e.g., Google Kubernetes Engine - GKE, Minikube, or Docker Desktop with Kubernetes enabled), Helm, and `kubectl` configured.
-2. **Infrastructure:** Navigate to the `cinebook-infra` repository. Ensure you have the necessary secrets configured (e.g., Database passwords, Keycloak credentials, Razorpay API keys, Twilio credentials).
-3. **Deployment:** Apply the Kubernetes manifests and Helm charts provided in the `cinebook-infra` repository to spin up the databases, Kafka cluster, Keycloak instance, and all the microservices.
+### Administration & RBAC
+* **Dynamic Master Data Updates:** Admins (`ROLE_ADMIN`) can dynamically add Movies, Cinemas, and schedule Showtimes via protected REST APIs, immediately invalidating the relevant Redis caches to reflect changes system-wide.
+
+### Frontend Application (SPA)
+* **Vite HMR & Build Optimization:** Leveraging Vite for Lightning-fast Hot Module Replacement (HMR) during development and highly optimized Rollup builds for production.
+* **Context API & React Router:** Efficient client-side routing combined with React Context to manage global authentication tokens and the user's currently selected geolocation without prop-drilling.
+
+---
+
+## 🛠️ Infrastructure Provisioning (How to Run)
+
+This application is strictly designed for cloud-native deployment. 
+
+1. **Prerequisites:** Ensure you have a running Kubernetes cluster, Helm v3, and `kubectl`.
+2. **Secrets Management:** You must create Kubernetes `Secret` objects in your namespace for:
+   - PostgreSQL credentials.
+   - Keycloak Admin credentials.
+   - Razorpay `API_KEY` and `API_SECRET`.
+   - Twilio Account SID and Auth Token.
+3. **Deployment Topology:** 
+   - First, deploy the infrastructure dependencies via Helm (Kafka + Zookeeper/KRaft, Redis, PostgreSQL).
+   - Second, deploy Keycloak and import the application realm configuration.
+   - Finally, apply the service manifests (`kubectl apply -f cinebook-infra/`) to spin up the microservices.
