@@ -4,6 +4,11 @@ Welcome to the CineBook application repository! CineBook is a modern, highly sca
 
 This repository serves as the central manifest and documentation hub for the entire system, detailing the architecture, technology stack, and technical design patterns implemented across all services.
 
+## What is CineBook?
+
+CineBook is a **multi-tenant movie ticketing platform** built with a microservices architecture. It supports browsing movies, selecting seats, completing payments via Razorpay, and receiving booking confirmations via email/SMS.
+
+
 ---
 
 ## 🏗️ Microservices Architecture
@@ -75,10 +80,6 @@ To diagnose issues in a distributed system, comprehensive observability is manda
 - **Metrics Dashboarding:** **Micrometer** exposes JVM, database connection pool, and application-specific metrics to a `/actuator/prometheus` endpoint, which is scraped by a Prometheus server for Grafana dashboarding.
 - **API Documentation:** Interactive API contracts are automatically generated using **Springdoc OpenAPI 3 (Swagger UI)**, accessible at the `/swagger-ui.html` endpoint on each service.
 
-### 6. CI/CD & Deployment Pipeline
-- **Containerization:** Every service includes a highly optimized `Dockerfile` leveraging multi-stage builds and lightweight JRE base images to minimize the attack surface and image size.
-- **Continuous Integration:** The repository utilizes **Google Cloud Build** (`cloudbuild.yaml`) to automate the pipeline: compiling Java source, running unit/integration tests, building Docker images, and pushing them to a container registry.
-- **Kubernetes Orchestration:** Infrastructure manifests define `Deployments` (with readiness/liveness probes), `Services` (for internal DNS resolution), and an `Ingress` controller (acting as an API Gateway and TLS termination point) for the production environment.
 
 ---
 
@@ -97,17 +98,132 @@ To diagnose issues in a distributed system, comprehensive observability is manda
 
 ---
 
-## 🛠️ Infrastructure Provisioning (How to Run)
+## Tech Stack
 
-This application is strictly designed for cloud-native deployment. 
+| Layer | Technology |
+|---|---|
+| Language | Java 21 |
+| Framework | Spring Boot 3.x |
+| Build | Maven |
+| Event Sourcing | Axon Framework |
+| Saga Orchestration | Temporal |
+| Messaging | Apache Kafka (Confluent) + Avro (Apicurio Schema Registry) |
+| Identity | Keycloak 24 |
+| Database | PostgreSQL 15 |
+| Cache | Redis |
+| Observability | OpenTelemetry → Prometheus + Grafana + OpenSearch |
+| Containers | Docker |
+| Orchestration | Kubernetes (Docker Desktop) |
+| Deployment | Helm charts |
+| Payment | Razorpay |
 
-1. **Prerequisites:** Ensure you have a running Kubernetes cluster, Helm v3, and `kubectl`.
-2. **Secrets Management:** You must create Kubernetes `Secret` objects in your namespace for:
-   - PostgreSQL credentials.
-   - Keycloak Admin credentials.
-   - Razorpay `API_KEY` and `API_SECRET`.
-   - Twilio Account SID and Auth Token.
-3. **Deployment Topology:** 
-   - First, deploy the infrastructure dependencies via Helm (Kafka + Zookeeper/KRaft, Redis, PostgreSQL).
-   - Second, deploy Keycloak and import the application realm configuration.
-   - Finally, apply the service manifests (`kubectl apply -f cinebook-infra/`) to spin up the microservices.
+---
+
+## Local Development Setup
+
+### Prerequisites
+
+- Docker Desktop with Kubernetes enabled
+- `kubectl` configured to use Docker Desktop context
+- `helm` installed
+- Java 21 + Maven
+- Node.js (for frontend)
+
+### Step 1 — Start the Infrastructure
+
+```powershell
+docker-compose -f cinebook-infra/local/docker-compose.dev.yml up -d
+```
+
+This starts: PostgreSQL, Kafka, Zookeeper, Apicurio Schema Registry, Temporal, Axon Server, Keycloak, Redis, Adminer, Kafka UI, OpenTelemetry Collector, Prometheus, Grafana, OpenSearch, OpenSearch Dashboards.
+
+Wait ~30 seconds for all services to be healthy.
+
+### Step 2 — Build Docker Images
+
+```powershell
+# Example: build booking-service
+cd booking-service
+docker build -t booking-service:latest .
+
+# Repeat for each service
+cd ../cinema-service && docker build -t cinema-service:latest .
+cd ../user-management-service && docker build -t user-management-service:latest .
+cd ../payment-service && docker build -t payment-service:latest .
+cd ../notification-service && docker build -t notification-service:latest .
+cd ../location-service && docker build -t location-service:latest .
+```
+
+### Step 3 — Deploy to Kubernetes via Helm
+
+```powershell
+cd cinebook-infra
+
+helm upgrade --install user-management-service ./helm/cinebook-microservice -f ./helm/values-user-management-local.yaml
+helm upgrade --install cinema-service          ./helm/cinebook-microservice -f ./helm/values-cinema-local.yaml
+helm upgrade --install booking-service         ./helm/cinebook-microservice -f ./helm/values-booking-local.yaml
+helm upgrade --install payment-service         ./helm/cinebook-microservice -f ./helm/values-payment-local.yaml
+helm upgrade --install notification-service    ./helm/cinebook-microservice -f ./helm/values-notification-local.yaml
+helm upgrade --install location-service        ./helm/cinebook-microservice -f ./helm/values-location-local.yaml
+```
+
+### Step 4 — Port Forward Services
+
+```powershell
+Start-Job -ScriptBlock { kubectl port-forward svc/user-management-service-svc 8086:8086 }
+Start-Job -ScriptBlock { kubectl port-forward svc/cinema-service-svc         8083:8083 }
+Start-Job -ScriptBlock { kubectl port-forward svc/booking-service-svc        8085:8085 }
+Start-Job -ScriptBlock { kubectl port-forward svc/payment-service-svc        7085:7085 }
+Start-Job -ScriptBlock { kubectl port-forward svc/notification-service-svc   7083:7083 }
+Start-Job -ScriptBlock { kubectl port-forward svc/location-service-svc       7086:7086 }
+```
+
+### Step 5 — Start Frontend
+
+```powershell
+cd cinebook-frontend
+npm install
+npm run dev
+```
+
+### Stop Port Forwarding
+
+```powershell
+Get-Job | Stop-Job | Remove-Job
+```
+
+---
+
+## Service Ports (Local)
+
+| Service | Port |
+|---|---|
+| user-management-service | 8086 |
+| cinema-service | 8083 |
+| booking-service | 8085 |
+| payment-service | 7085 |
+| notification-service | 7083 |
+| location-service | 7086 |
+
+## Infrastructure Ports (Docker Compose)
+
+| Service | Port |
+|---|---|
+| PostgreSQL | 5432 |
+| Kafka | 9092 |
+| Apicurio Schema Registry | 8081 |
+| Temporal gRPC | 7233 |
+| Temporal UI | 8089 |
+| Axon Dashboard | 8024 |
+| Axon gRPC | 8124 |
+| Keycloak | 8080 |
+| Redis | 6379 |
+| Adminer | 8082 |
+| Kafka UI | 9091 |
+| OpenTelemetry (gRPC) | 4317 |
+| Prometheus | 9090 |
+| Grafana | 3000 |
+| OpenSearch | 9200 |
+| OpenSearch Dashboards | 5601 |
+
+
