@@ -170,12 +170,12 @@ helm upgrade --install location-service        ./helm/cinebook-microservice -f .
 ### Step 4 — Port Forward Services
 
 ```powershell
-Start-Job -ScriptBlock { kubectl port-forward svc/user-management-service-svc 8086:8086 }
-Start-Job -ScriptBlock { kubectl port-forward svc/cinema-service-svc         8083:8083 }
-Start-Job -ScriptBlock { kubectl port-forward svc/booking-service-svc        8085:8085 }
-Start-Job -ScriptBlock { kubectl port-forward svc/payment-service-svc        7085:7085 }
-Start-Job -ScriptBlock { kubectl port-forward svc/notification-service-svc   7083:7083 }
-Start-Job -ScriptBlock { kubectl port-forward svc/location-service-svc       7086:7086 }
+Start-Job -ScriptBlock { kubectl port-forward -n cinebook svc/user-management-service-svc 8086:8086 }
+Start-Job -ScriptBlock { kubectl port-forward -n cinebook svc/cinema-service-svc 8083:8083 }
+Start-Job -ScriptBlock { kubectl port-forward -n cinebook svc/booking-service-svc 8085:8085 }
+Start-Job -ScriptBlock { kubectl port-forward -n cinebook svc/payment-service-svc 7085:7085 }
+Start-Job -ScriptBlock { kubectl port-forward -n cinebook svc/notification-service-svc 7083:7083 }
+Start-Job -ScriptBlock { kubectl port-forward -n cinebook svc/location-service-svc 7086:7086 }
 ```
 
 ### Step 5 — Start Frontend
