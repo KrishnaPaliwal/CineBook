@@ -29,13 +29,33 @@ cd cinebook-infra/local
 docker compose -f docker-compose.dev.yml up -d
 ```
 
-### Verify Infrastructure Services:
-* **PostgreSQL:** `localhost:5432`
-* **Keycloak Auth:** `http://localhost:8080` (Realm: `cinebook`)
-* **Kafka Broker:** `localhost:9092` / `localhost:29092`
-* **Apicurio Schema Registry:** `http://localhost:8081`
-* **Axon Server Dashboard:** `http://localhost:8024`
-* **Temporal UI:** `http://localhost:8089`
+### 📊 Infrastructure Web UI & Observability Dashboards
+
+| Service | Web UI / Interface URL | Credentials / Details |
+| :--- | :--- | :--- |
+| **Axon Server** | [http://localhost:8024](http://localhost:8024) | Axon Event Store & Command Routing Dashboard |
+| **Grafana** | [http://localhost:3000](http://localhost:3000) | Observability Dashboard (Default: `admin` / `admin`) |
+| **OpenSearch Dashboards** | [http://localhost:5601](http://localhost:5601) | Log & Search Analytics (User: `admin`, Password: `admin`) |
+| **Prometheus** | [http://localhost:9090](http://localhost:9090) | Metrics & Alerting Engine |
+| **Temporal UI** | [http://localhost:8089](http://localhost:8089) | Saga Workflow Orchestration UI |
+| **Keycloak (OIDC Auth)** | [http://localhost:8080](http://localhost:8080) | Realm: `cinebook` \| Admin: `admin` / `admin` |
+| **Kafka UI** | [http://localhost:9091](http://localhost:9091) | Kafka Topic & Message Inspector |
+| **Apicurio (Schema Registry)** | [http://localhost:8081](http://localhost:8081) | Avro Schema Repository |
+| **Adminer (DB Web Client)** | [http://localhost:8082](http://localhost:8082) | PostgreSQL Web Client |
+
+### 🔌 Backend Infrastructure Connection Endpoints
+
+| Service | Host & Port | Description |
+| :--- | :--- | :--- |
+| **Axon Server (gRPC)** | `localhost:8124` | Application gRPC Connection |
+| **OpenSearch API** | `https://localhost:9200` | OpenSearch Engine API (Basic Auth: `admin` / `admin`) |
+| **OTEL Collector (OTLP gRPC)** | `localhost:4317` | OpenTelemetry Traces/Metrics gRPC |
+| **OTEL Collector (OTLP HTTP)** | `localhost:4318` | OpenTelemetry Traces/Metrics HTTP |
+| **Kafka Broker** | `localhost:9092` / `localhost:29092` | Kafka Bootstrap Server |
+| **Temporal Server** | `localhost:7233` | Temporal gRPC Endpoint |
+| **PostgreSQL** | `localhost:5432` | DB: `cinebook_booking_db` \| User: `postgres`, Password: `password` |
+| **Redis** | `localhost:6379` | User Profile & Caching Layer |
+
 
 ---
 
