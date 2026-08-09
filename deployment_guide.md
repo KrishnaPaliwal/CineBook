@@ -143,6 +143,7 @@ kubectl get pods -n cinebook
 
 ## 🔌 5. Port Forwarding & Services Exposure
 
+### Start Port Forwarding (Background Jobs)
 To allow local development access and frontend communication, run background port forwarding jobs:
 
 ```powershell
@@ -152,6 +153,13 @@ Start-Job -ScriptBlock { kubectl port-forward -n cinebook svc/booking-service-sv
 Start-Job -ScriptBlock { kubectl port-forward -n cinebook svc/payment-service-svc 7085:7085 }
 Start-Job -ScriptBlock { kubectl port-forward -n cinebook svc/notification-service-svc 7083:7083 }
 Start-Job -ScriptBlock { kubectl port-forward -n cinebook svc/location-service-svc 7086:7086 }
+```
+
+### Stop Port Forwarding (Background Jobs)
+To stop and clean up all active port forwarding background jobs:
+
+```powershell
+Get-Job | Stop-Job | Remove-Job
 ```
 
 ---
